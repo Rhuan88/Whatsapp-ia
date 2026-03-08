@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: bmmob-bot
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: WHATSAPP_API_URL
+        sync: false
+      - key: WHATSAPP_INSTANCE
+        sync: false
+      - key: WHATSAPP_TOKEN
+        sync: false

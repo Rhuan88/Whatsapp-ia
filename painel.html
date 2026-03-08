@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BM MOB Bot — Painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #060810;
+  --surf:     #0d1117;
+  --surf2:    #131920;
+  --border:   #1c2535;
+  --border2:  #243045;
+  --text:     #c9d8eb;
+  --muted:    #4d6480;
+  --blue:     #3b82f6;
+  --blue2:    #1d4ed8;
+  --green:    #22c55e;
+  --amber:    #f59e0b;
+  --red:      #ef4444;
+  --cyan:     #06b6d4;
+  --mono:     'Space Mono', monospace;
+  --sans:     'DM Sans', sans-serif;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans); display:flex; flex-direction:column; }
+
+/* ── HEADER ── */
+header {
+  background:var(--surf);
+  border-bottom:1px solid var(--border);
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 1.5rem;
+  flex-shrink:0;
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+.brand { display:flex; align-items:center; gap:10px; }
+.brand-badge {
+  width:30px; height:30px;
+  background:var(--blue);
+  border-radius:6px;
+  display:grid; place-items:center;
+  font-size:15px;
+}
+.brand-name { font-family:var(--mono); font-size:12px; font-weight:700; color:#fff; letter-spacing:.04em; }
+.brand-sub  { font-family:var(--mono); font-size:9px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
+.online { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; color:var(--green); }
+.pulse { width:6px; height:6px; border-radius:50%; background:var(--green); animation:blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── LAYOUT ── */
+.layout { display:flex; flex:1; overflow:hidden; }
+
+/* ── SIDEBAR ── */
+nav {
+  width:190px;
+  background:var(--surf);
+  border-right:1px solid var(--border);
+  padding:1rem 0;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  gap:.25rem;
+}
+.nav-section { padding:.5rem 1rem .25rem; font-family:var(--mono); font-size:8px; letter-spacing:.15em; color:var(--muted); text-transform:uppercase; }
+.nav-item {
+  display:flex; align-items:center; gap:8px;
+  padding:.55rem 1rem;
+  font-size:12.5px;
+  color:var(--muted);
+  cursor:pointer;
+  border-left:2px solid transparent;
+  transition:all .12s;
+}
+.nav-item:hover { color:var(--text); background:var(--surf2); }
+.nav-item.active { color:#fff; border-left-color:var(--blue); background:var(--surf2); }
+
+/* ── CONTENT ── */
+main { flex:1; padding:1.5rem; overflow-y:auto; }
+
+/* ── STATS ── */
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:.75rem; margin-bottom:1.5rem; }
+.stat {
+  background:var(--surf);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:1rem 1.2rem;
+  position:relative;
+  overflow:hidden;
+}
+.stat::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.stat.s-blue::after  { background:var(--blue); }
+.stat.s-cyan::after  { background:var(--cyan); }
+.stat.s-amber::after { background:var(--amber); }
+.stat.s-green::after { background:var(--green); }
+.stat-lbl { font-family:var(--mono); font-size:9px; letter-spacing:.1em; color:var(--muted); text-transform:uppercase; margin-bottom:.5rem; }
+.stat-val { font-family:var(--mono); font-size:26px; font-weight:700; color:#fff; line-height:1; }
+.stat-sub { font-size:11px; color:var(--muted); margin-top:.3rem; }
+
+/* ── TABS ── */
+.tabs { display:flex; border-bottom:1px solid var(--border); margin-bottom:1rem; }
+.tab {
+  padding:.6rem 1.2rem;
+  font-family:var(--mono);
+  font-size:11px;
+  cursor:pointer;
+  color:var(--muted);
+  border-bottom:2px solid transparent;
+  letter-spacing:.04em;
+  transition:all .12s;
+}
+.tab:hover { color:var(--text); }
+.tab.active { color:#fff; border-bottom-color:var(--blue); }
+
+/* ── FILTER BAR ── */
+.fbar { display:flex; gap:.6rem; margin-bottom:1rem; }
+.search {
+  flex:1;
+  background:var(--surf);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:.5rem .9rem;
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:11px;
+  outline:none;
+}
+.search:focus { border-color:var(--blue); }
+.search::placeholder { color:var(--muted); }
+.fsel {
+  background:var(--surf);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:.5rem .9rem;
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:11px;
+  outline:none;
+  cursor:pointer;
+}
+
+/* ── TABLE ── */
+.tbl-wrap { background:var(--surf); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+table { width:100%; border-collapse:collapse; }
+thead { background:var(--surf2); border-bottom:1px solid var(--border); }
+th {
+  padding:.7rem 1rem;
+  text-align:left;
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+  font-weight:400;
+}
+td {
+  padding:.75rem 1rem;
+  font-size:12px;
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,.02); }
+.proto { font-family:var(--mono); font-size:10px; color:var(--cyan); letter-spacing:.04em; }
+
+/* ── BADGES ── */
+.badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 7px;
+  border-radius:4px;
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.bd { width:4px; height:4px; border-radius:50%; }
+.b-reg   { background:rgba(59,130,246,.15); color:#60a5fa; }
+.b-reg .bd   { background:#60a5fa; }
+.b-open  { background:rgba(59,130,246,.15); color:#60a5fa; }
+.b-open .bd  { background:#60a5fa; }
+.b-prog  { background:rgba(245,158,11,.15); color:#fbbf24; }
+.b-prog .bd  { background:#fbbf24; }
+.b-apres { background:rgba(245,158,11,.15); color:#fbbf24; }
+.b-apres .bd { background:#fbbf24; }
+.b-done  { background:rgba(34,197,94,.15);  color:#4ade80; }
+.b-done .bd  { background:#4ade80; }
+.b-enc   { background:rgba(34,197,94,.15);  color:#4ade80; }
+.b-enc .bd   { background:#4ade80; }
+.b-cancel{ background:rgba(239,68,68,.15);  color:#f87171; }
+.b-cancel .bd{ background:#f87171; }
+
+/* ── PRIO ── */
+.prio { font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.prio.urgente { color:var(--red); }
+.prio.alta    { color:var(--amber); }
+.prio.normal  { color:var(--muted); }
+
+/* ── BTN ── */
+.btn { padding:4px 10px; border-radius:5px; font-family:var(--mono); font-size:10px; cursor:pointer; border:none; transition:all .12s; }
+.btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--text); border-color:var(--border2); }
+.btn-primary { background:var(--blue); color:#fff; }
+.btn-primary:hover { background:var(--blue2); }
+
+/* ── EMPTY ── */
+.empty { text-align:center; padding:3rem; color:var(--muted); font-family:var(--mono); font-size:12px; }
+.empty-icon { font-size:36px; margin-bottom:.8rem; opacity:.3; }
+
+/* ── MODAL ── */
+.overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.75);
+  z-index:200;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(6px);
+}
+.overlay.open { display:flex; }
+.modal {
+  background:var(--surf);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  width:min(740px, 95vw);
+  max-height:85vh;
+  overflow-y:auto;
+  padding:1.5rem;
+  animation:up .2s ease;
+}
+@keyframes up { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.modal-hdr { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.2rem; padding-bottom:1rem; border-bottom:1px solid var(--border); }
+.modal-title { font-family:var(--mono); font-size:13px; color:#fff; font-weight:700; }
+.modal-num   { font-family:var(--mono); font-size:11px; color:var(--cyan); margin-top:3px; }
+.modal-close { background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; }
+.modal-close:hover { color:var(--text); }
+.modal-doc {
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:1.2rem;
+  font-family:var(--mono);
+  font-size:11px;
+  line-height:1.9;
+  color:var(--text);
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+/* ── PAGES ── */
+.page { display:none; }
+.page.active { display:block; }
+
+@media(max-width:800px) {
+  .stats { grid-template-columns:repeat(2,1fr); }
+  nav { display:none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-badge">🏛️</div>
+    <div>
+      <div class="brand-name">BM MOB BOT — Painel Administrativo</div>
+      <div class="brand-sub">Sistema de Registros Oficiais · Brigada Militar RS</div>
+    </div>
+  </div>
+  <div class="online"><div class="pulse"></div>Operacional</div>
+</header>
+
+<div class="layout">
+
+  <nav>
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="goPage('dash',this)">◈ &nbsp;Dashboard</div>
+    <div class="nav-item" onclick="goPage('bo',this)">🚔 &nbsp;Boletins</div>
+    <div class="nav-item" onclick="goPage('os',this)">🔧 &nbsp;Ordens de Serviço</div>
+    <div class="nav-section" style="margin-top:.5rem">Sistema</div>
+    <div class="nav-item" onclick="goPage('config',this)">◎ &nbsp;Configuração</div>
+  </nav>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dash">
+
+      <div class="stats">
+        <div class="stat s-blue">
+          <div class="stat-lbl">Total Boletins</div>
+          <div class="stat-val" id="s-bo">—</div>
+          <div class="stat-sub">Registros de ocorrência</div>
+        </div>
+        <div class="stat s-cyan">
+          <div class="stat-lbl">Ordens Abertas</div>
+          <div class="stat-val" id="s-os">—</div>
+          <div class="stat-sub">Em aberto / andamento</div>
+        </div>
+        <div class="stat s-amber">
+          <div class="stat-lbl">Pendentes</div>
+          <div class="stat-val" id="s-pend">—</div>
+          <div class="stat-sub">Aguardando ação</div>
+        </div>
+        <div class="stat s-green">
+          <div class="stat-lbl">Concluídas</div>
+          <div class="stat-val" id="s-done">—</div>
+          <div class="stat-sub">OSs encerradas</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'t-bo')">Boletins Recentes</div>
+        <div class="tab" onclick="switchTab(this,'t-os')">OSs Recentes</div>
+      </div>
+
+      <div id="t-bo">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Protocolo</th><th>Tipo</th><th>Status</th><th>Data</th><th>Telefone</th><th></th></tr></thead>
+            <tbody id="tb-bo-dash"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="t-os" style="display:none">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Número OS</th><th>Tipo Serviço</th><th>Status</th><th>Data</th><th>Telefone</th><th></th></tr></thead>
+            <tbody id="tb-os-dash"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOLETINS -->
+    <div class="page" id="page-bo">
+      <div class="fbar">
+        <input class="search" placeholder="🔍 Buscar protocolo, tipo..." oninput="filtrarBO(this.value)">
+        <select class="fsel" onchange="filtrarBOStatus(this.value)">
+          <option value="">Todos os status</option>
+          <option value="REGISTRADO">Registrado</option>
+          <option value="APRESENTADO">Apresentado</option>
+          <option value="ENCERRADO">Encerrado</option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Protocolo</th><th>Tipo Ocorrência</th><th>Status</th><th>Data</th><th>Telefone</th><th></th></tr></thead>
+          <tbody id="tb-bo-full"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDENS -->
+    <div class="page" id="page-os">
+      <div class="fbar">
+        <input class="search" placeholder="🔍 Buscar nº OS, tipo..." oninput="filtrarOS(this.value)">
+        <select class="fsel" onchange="filtrarOSStatus(this.value)">
+          <option value="">Todos os status</option>
+          <option value="ABERTA">Aberta</option>
+          <option value="EM_ANDAMENTO">Em Andamento</option>
+          <option value="CONCLUIDA">Concluída</option>
+          <option value="CANCELADA">Cancelada</option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Número OS</th><th>Tipo Serviço</th><th>Status</th><th>Data</th><th>Telefone</th><th></th></tr></thead>
+          <tbody id="tb-os-full"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="page" id="page-config">
+      <div style="background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:1.5rem;max-width:560px">
+        <div style="font-family:var(--mono);font-size:13px;color:#fff;margin-bottom:1rem;font-weight:700">⚙️ Configuração do Bot</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:1.5rem;line-height:1.7">
+          Configure a URL base da API backend para o painel buscar dados reais.
+          Por padrão, usa dados de demonstração.
+        </p>
+        <label style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:.4rem">URL do Backend</label>
+        <input id="cfg-url" class="search" style="width:100%;margin-bottom:1rem" placeholder="https://bmmob-bot.onrender.com">
+        <button class="btn btn-primary" onclick="salvarConfig()">Salvar & Recarregar</button>
+        <div id="cfg-msg" style="font-family:var(--mono);font-size:11px;color:var(--green);margin-top:.8rem;display:none">✅ Configuração salva.</div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0">
+
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);line-height:2">
+          <div>📡 Webhook: <span style="color:var(--cyan)">POST /webhook</span></div>
+          <div>❤️  Health:  <span style="color:var(--cyan)">GET /health</span></div>
+          <div>📋 BOs:     <span style="color:var(--cyan)">GET /api/boletins</span></div>
+          <div>🔧 OSs:     <span style="color:var(--cyan)">GET /api/ordens</span></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal documento -->
+<div class="overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title" id="m-title">Documento</div>
+        <div class="modal-num"   id="m-num"></div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-doc" id="m-doc"></div>
+  </div>
+</div>
+
+<script>
+// ── Dados demo ───────────────────────────────────────────────
+const DEMO_BO = [
+  {
+    protocolo:'BO-2025-0047382',
+    tipo_ocorrencia:'FURTO DE VEÍCULO',
+    status:'REGISTRADO',
+    criado_em:'2025-07-10T14:32:00',
+    telefone:'5551999990001',
+    documento_gerado:`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 GUIA DE PREENCHIMENTO — BM MOB
+Protocolo: BO-2025-0047382
+Gerado em: 10/07/2025 14:32
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔷 TELA 1 — DADOS GERAIS
+┌──────────────────────────────────
+│ Órgão de Registro : BM · 9º BPM · Porto Alegre/RS
+│ Operação          : NÃO INFORMADO
+│ Forma de Comunicação: Fone
+│ Data/Hora Comunicação: 10/07/2025 às 14h00
+└──────────────────────────────────
+
+🔷 TELA 2 — FATO
+┌──────────────────────────────────
+│ Natureza / Fato   : FURTO DE VEÍCULO AUTOMOTOR
+│ Forma             : CONSUMADO
+│ Fatos Complementares: NÃO INFORMADO
+└──────────────────────────────────
+
+🔷 TELA 3 — LOCAL DO FATO
+┌──────────────────────────────────
+│ Cidade            : Porto Alegre
+│ UF                : RS
+│ Logradouro        : Rua das Palmeiras
+│ Número            : 450
+│ Bairro            : Centro Histórico
+│ Tipo de Local     : Via Pública
+└──────────────────────────────────
+
+🔷 TELA 4 — PARTICIPANTES
+
+  ► DECLARANTE / VÍTIMA
+┌──────────────────────────────────
+│ Participação      : VÍTIMA
+│ Nome              : João da Silva
+│ RG                : 1234567
+│ Condição Física   : ILESA
+└──────────────────────────────────
+
+🔷 TELA 5 — HISTÓRICO / NARRATIVA
+┌──────────────────────────────────
+│ Narrativa (Parte 1):
+│ O declarante compareceu ao sistema para comunicar que, em
+│ data e hora supramencionadas, ao retornar ao local onde
+│ havia estacionado seu veículo de cor prata, placa ABC-1234,
+│ constatou o desaparecimento do mesmo. Informa desconhecer
+│ a identidade de possíveis autores.
+│
+│ Caracteres estimados: 312
+└──────────────────────────────────
+
+🔷 TELA 6 — OBJETOS / DOCUMENTOS
+┌──────────────────────────────────
+│ Veículos Envolvidos: Automóvel · prata · placa ABC-1234
+│ Objetos Subtraídos : Veículo
+│ Outros Órgãos      : NÃO INFORMADO
+└──────────────────────────────────`
+  },
+  {
+    protocolo:'BO-2025-0047391',
+    tipo_ocorrencia:'DANO AO PATRIMÔNIO',
+    status:'APRESENTADO',
+    criado_em:'2025-07-10T09:15:00',
+    telefone:'5551999990002',
+    documento_gerado:`📋 GUIA DE PREENCHIMENTO — BM MOB\nProtocolo: BO-2025-0047391\n\n[Documento completo...]\n\nNatureza: DANO AO PATRIMÔNIO PRIVADO\nForma: CONSUMADO`
+  }
+];
+
+const DEMO_OS = [
+  {
+    numero_os:'OS-202507-00123',
+    tipo_servico:'ELÉTRICO',
+    status:'ABERTA',
+    criado_em:'2025-07-10T08:00:00',
+    telefone:'5551999990010',
+    documento_gerado:`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 ORDEM DE SERVIÇO
+Número OS : OS-202507-00123
+Abertura  : 10/07/2025
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔷 BLOCO 1 — IDENTIFICAÇÃO
+│ Tipo de Serviço   : ELÉTRICO
+│ Prioridade        : URGENTE
+
+🔷 BLOCO 4 — DESCRIÇÃO DO PROBLEMA
+│ O solicitante noticia que, na madrugada do dia 10/07/2025,
+│ houve interrupção total de energia no 3º andar do Bloco B,
+│ com relato de faíscas no quadro de distribuição antes do
+│ desligamento. O problema afeta quatro unidades e o corredor.
+│
+│ Risco Imediato: Sim`
+  },
+  {
+    numero_os:'OS-202507-00118',
+    tipo_servico:'HIDRÁULICO',
+    status:'EM_ANDAMENTO',
+    criado_em:'2025-07-09T14:20:00',
+    telefone:'5551999990011',
+    documento_gerado:`🔧 OS-202507-00118 · HIDRÁULICO\nPrioridade: ALTA\nProblema: Rompimento de tubulação em área pública.`
+  },
+  {
+    numero_os:'OS-202507-00109',
+    tipo_servico:'LIMPEZA / CONSERVAÇÃO',
+    status:'CONCLUIDA',
+    criado_em:'2025-07-08T10:00:00',
+    telefone:'5551999990012',
+    documento_gerado:`🔧 OS-202507-00109 · LIMPEZA\nPrioridade: NORMAL\nStatus: CONCLUÍDA`
+  }
+];
+
+// ── Estado ────────────────────────────────────────────────────
+let allBO = [...DEMO_BO];
+let allOS = [...DEMO_OS];
+
+// ── Init ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  renderStats();
+  renderBO('tb-bo-dash', allBO.slice(0,5));
+  renderOS('tb-os-dash', allOS.slice(0,5));
+  renderBO('tb-bo-full', allBO);
+  renderOS('tb-os-full', allOS);
+
+  const saved = localStorage.getItem('api_url');
+  if (saved) document.getElementById('cfg-url').value = saved;
+});
+
+function renderStats() {
+  document.getElementById('s-bo').textContent   = allBO.length;
+  document.getElementById('s-os').textContent   = allOS.filter(o=>['ABERTA','EM_ANDAMENTO'].includes(o.status)).length;
+  document.getElementById('s-pend').textContent = allBO.filter(b=>b.status==='REGISTRADO').length + allOS.filter(o=>o.status==='ABERTA').length;
+  document.getElementById('s-done').textContent = allOS.filter(o=>o.status==='CONCLUIDA').length;
+}
+
+function badgeBO(s) {
+  const m = {REGISTRADO:'b-reg',APRESENTADO:'b-apres',ENCERRADO:'b-enc'};
+  const c = m[s]||'b-reg';
+  return `<span class="badge ${c}"><span class="bd"></span>${s}</span>`;
+}
+function badgeOS(s) {
+  const m = {ABERTA:'b-open',EM_ANDAMENTO:'b-prog',CONCLUIDA:'b-done',CANCELADA:'b-cancel'};
+  const c = m[s]||'b-open';
+  return `<span class="badge ${c}"><span class="bd"></span>${s.replace('_',' ')}</span>`;
+}
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function renderBO(id, data) {
+  const tb = document.getElementById(id);
+  if (!data.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">🚔</div>Nenhum boletim.</div></td></tr>`; return; }
+  tb.innerHTML = data.map(b => `
+    <tr>
+      <td><span class="proto">${b.protocolo}</span></td>
+      <td style="font-size:11px">${b.tipo_ocorrencia}</td>
+      <td>${badgeBO(b.status)}</td>
+      <td style="font-size:10px;font-family:var(--mono);color:var(--muted)">${fmtDate(b.criado_em)}</td>
+      <td style="font-size:11px;font-family:var(--mono)">${b.telefone}</td>
+      <td><button class="btn btn-ghost" onclick='openModal("bo",${JSON.stringify(b)})'>Ver</button></td>
+    </tr>`).join('');
+}
+
+function renderOS(id, data) {
+  const tb = document.getElementById(id);
+  if (!data.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔧</div>Nenhuma OS.</div></td></tr>`; return; }
+  tb.innerHTML = data.map(o => `
+    <tr>
+      <td><span class="proto">${o.numero_os}</span></td>
+      <td style="font-size:11px">${o.tipo_servico}</td>
+      <td>${badgeOS(o.status)}</td>
+      <td style="font-size:10px;font-family:var(--mono);color:var(--muted)">${fmtDate(o.criado_em)}</td>
+      <td style="font-size:11px;font-family:var(--mono)">${o.telefone}</td>
+      <td><button class="btn btn-ghost" onclick='openModal("os",${JSON.stringify(o)})'>Ver</button></td>
+    </tr>`).join('');
+}
+
+function openModal(tipo, item) {
+  document.getElementById('m-title').textContent = tipo==='bo'?'Guia Boletim de Ocorrência':'Ordem de Serviço';
+  document.getElementById('m-num').textContent   = tipo==='bo'?`Protocolo: ${item.protocolo}`:`Número: ${item.numero_os}`;
+  document.getElementById('m-doc').textContent   = item.documento_gerado;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target===document.getElementById('modal'))
+    document.getElementById('modal').classList.remove('open');
+}
+
+function goPage(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function switchTab(el, tabId) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('t-bo').style.display = tabId==='t-bo'?'block':'none';
+  document.getElementById('t-os').style.display = tabId==='t-os'?'block':'none';
+}
+
+function filtrarBO(q) {
+  renderBO('tb-bo-full', allBO.filter(b=>
+    b.protocolo.toLowerCase().includes(q.toLowerCase())||
+    b.tipo_ocorrencia.toLowerCase().includes(q.toLowerCase())
+  ));
+}
+function filtrarBOStatus(s) { renderBO('tb-bo-full', s?allBO.filter(b=>b.status===s):allBO); }
+function filtrarOS(q) {
+  renderOS('tb-os-full', allOS.filter(o=>
+    o.numero_os.toLowerCase().includes(q.toLowerCase())||
+    o.tipo_servico.toLowerCase().includes(q.toLowerCase())
+  ));
+}
+function filtrarOSStatus(s) { renderOS('tb-os-full', s?allOS.filter(o=>o.status===s):allOS); }
+
+function salvarConfig() {
+  const url = document.getElementById('cfg-url').value.trim();
+  if (url) localStorage.setItem('api_url', url);
+  const msg = document.getElementById('cfg-msg');
+  msg.style.display = 'block';
+  setTimeout(()=>msg.style.display='none', 3000);
+}
+</script>
+</body>
+</html>
