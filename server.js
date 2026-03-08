@@ -5,7 +5,9 @@
 // ============================================================
 
 require('dotenv').config();
+const crypto = require('crypto');
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 const axios = require('axios');
 
@@ -656,8 +658,36 @@ async function enviarMensagem(telefone, mensagem) {
   }
 }
 
+// ─── Autenticação do Painel Admin ────────────────────────────
+const adminRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+function autenticarAdmin(req, res, next) {
+  const adminToken = process.env.ADMIN_TOKEN;
+  if (!adminToken) {
+    return res.status(500).json({ erro: 'ADMIN_TOKEN não configurado no servidor.' });
+  }
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+  let igual = false;
+  try {
+    igual = token.length === adminToken.length &&
+      crypto.timingSafeEqual(Buffer.from(token), Buffer.from(adminToken));
+  } catch (_) {
+    igual = false;
+  }
+  if (!igual) {
+    return res.status(401).json({ erro: 'Não autorizado.' });
+  }
+  next();
+}
+
 // ─── REST API para painel admin ───────────────────────────────
-app.get('/api/boletins', async (req, res) => {
+app.get('/api/boletins', adminRateLimit, autenticarAdmin, async (req, res) => {
   try {
     const { status } = req.query;
     let q = `SELECT bo.*,s.telefone FROM boletins_ocorrencia bo
@@ -669,7 +699,7 @@ app.get('/api/boletins', async (req, res) => {
   } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
-app.get('/api/ordens', async (req, res) => {
+app.get('/api/ordens', adminRateLimit, autenticarAdmin, async (req, res) => {
   try {
     const { status } = req.query;
     let q = `SELECT os.*,s.telefone FROM ordens_servico os
@@ -681,7 +711,7 @@ app.get('/api/ordens', async (req, res) => {
   } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
-app.patch('/api/ordens/:id/status', async (req, res) => {
+app.patch('/api/ordens/:id/status', adminRateLimit, autenticarAdmin, async (req, res) => {
   try {
     const { status, responsavel } = req.body;
     await db.query(
@@ -692,7 +722,7 @@ app.patch('/api/ordens/:id/status', async (req, res) => {
   } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
-app.patch('/api/boletins/:id/status', async (req, res) => {
+app.patch('/api/boletins/:id/status', adminRateLimit, autenticarAdmin, async (req, res) => {
   try {
     await db.query(
       'UPDATE boletins_ocorrencia SET status=$1 WHERE id=$2',
