@@ -35,6 +35,14 @@ async function chamarClaude(system,user) {
   return r.data.content[0].text;
 }
 
+function promptBO(protocolo) {
+  return `Voce e um assistente especializado em Boletins de Ocorrencia da Brigada Militar do Rio Grande do Sul. Com base no relato fornecido, gere um guia detalhado e estruturado para preenchimento do aplicativo BM MOB, com o protocolo ${protocolo}. O guia deve conter: 1) Tipo de ocorrencia, 2) Dados do solicitante, 3) Dados do autor/suspeito (se houver), 4) Localizacao detalhada, 5) Descricao dos fatos em linguagem formal, 6) Objetos/veiculos envolvidos. Seja claro e objetivo, usando linguagem formal e juridica adequada.`;
+}
+
+function promptOS(numOS, tipo) {
+  return `Voce e um assistente especializado em ordens de servico. Com base na descricao fornecida, gere uma Ordem de Servico formal e detalhada numero ${numOS} do tipo ${tipo}. O documento deve conter: 1) Identificacao do solicitante, 2) Descricao detalhada do problema, 3) Localizacao/setor, 4) Grau de urgencia, 5) Acoes recomendadas, 6) Observacoes relevantes. Use linguagem tecnica e formal adequada.`;
+}
+
 async function gerarBO(relato, solId, protocolo) {
   const doc = await chamarClaude(promptBO(protocolo), `Relato:\n\n${relato}`);
   await db.query(`INSERT INTO boletins_ocorrencia(protocolo,solicitante_id,tipo_ocorrencia,relato_original,documento_gerado) VALUES($1,$2,$3,$4,$5)`,[protocolo,solId,'A CLASSIFICAR',relato,doc]);
@@ -109,34 +117,6 @@ async function processarMensagem(tel, mensagem) {
   await setEstado(tel,'MENU',{});
   return menuPrincipal();
 }
-
-app.post('/webhook',async(req,res)=>{
-  try{
-    const body=req.body; let tel,msg;
-    if(body.data?.key?.remoteJid){ tel=body.data.key.remoteJid.replace('@s.whatsapp.net',''); msg=body.data.message?.conversation||body.data.message?.extendedTextMessage?.text||''; }
-    else if(body.phone&&body.text){ tel=body.phone; msg=body.text?.message||''; }
-    else if(body.from&&body.body){ tel=body.from.replace('@c.us',''); msg=body.body; }
-    if(!tel||!msg) return res.sendStatus(200);
-    const resp=await processarMensagem(tel,msg);
-    await enviarMensagem(tel,resp);
-    res.sendStatus(200);
-  }catch(e){ console.error(e.message); res.sendStatus(500); }
-});
-
-async function enviarMensagem(tel,msg){
-  if(!process.env.WHATSAPP_API_URL){ console.log(`[-> ${tel}]: ${msg.substring(0,80)}`); return; }
-  try{ await axios.post(`${process.env.WHATSAPP_API_URL}/message/sendText/${process.env.WHATSAPP_INSTANCE}`,{number:tel,text:msg},{headers:{apikey:process.env.WHATSAPP_TOKEN}}); }
-  catch(e){ console.error('Envio:',e.message); }
-}
-
-app.get('/api/boletins',async(req,res)=>{ try{ const r=await db.query(`SELECT bo.*,s.telefone FROM boletins_ocorrencia bo JOIN solicitantes s ON s.id=bo.solicitante_id ORDER BY bo.criado_em DESC LIMIT 100`); res.json(r.rows); }catch(e){res.status(500).json({erro:e.message});} });
-app.get('/api/ordens',async(req,res)=>{ try{ const r=await db.query(`SELECT os.*,s.telefone FROM ordens_servico os JOIN solicitantes s ON s.id=os.solicitante_id ORDER BY os.criado_em DESC LIMIT 100`); res.json(r.rows); }catch(e){res.status(500).json({erro:e.message});} });
-app.patch('/api/ordens/:id/status',async(req,res)=>{ try{ await db.query('UPDATE ordens_servico SET status=$1 WHERE id=$2',[req.body.status,req.params.id]); res.json({ok:true}); }catch(e){res.status(500).json({erro:e.message});} });
-app.get('/health',async(req,res)=>{ try{ await db.query('SELECT 1'); res.json({status:'OK',uptime:Math.floor(process.uptime())+'s'}); }catch{ res.status(500).json({status:'ERRO_DB'}); } });
-app.get('/',(_,res)=>res.send('Bot BM MOB - Online'));
-
-const PORT=process.env.PORT||3000;
-inicializarBanco().then(()=>app.listen(PORT,()=>console.log(`Porta ${PORT}`))).catch(e=>{console.error(e);process.exit(1);});
 
 app.post('/webhook',async(req,res)=>{
   try{
