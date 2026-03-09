@@ -2,8 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
 const axios = require('axios');
+const rateLimit = require('express-rate-limit');
 const app = express();
 app.use(express.json());
+const apiLimiter = rateLimit({ windowMs: 60*1000, max: 60, standardHeaders: true, legacyHeaders: false });
+app.use('/api/', apiLimiter);
+app.use('/health', rateLimit({ windowMs: 60*1000, max: 30, standardHeaders: true, legacyHeaders: false }));
 
 const db = new Pool(
   process.env.DATABASE_URL
@@ -140,7 +144,30 @@ async function enviarMensagem(tel,msg){
 app.get('/api/boletins',async(req,res)=>{ try{ const r=await db.query(`SELECT bo.*,s.telefone FROM boletins_ocorrencia bo JOIN solicitantes s ON s.id=bo.solicitante_id ORDER BY bo.criado_em DESC LIMIT 100`); res.json(r.rows); }catch(e){res.status(500).json({erro:e.message});} });
 app.get('/api/ordens',async(req,res)=>{ try{ const r=await db.query(`SELECT os.*,s.telefone FROM ordens_servico os JOIN solicitantes s ON s.id=os.solicitante_id ORDER BY os.criado_em DESC LIMIT 100`); res.json(r.rows); }catch(e){res.status(500).json({erro:e.message});} });
 app.patch('/api/ordens/:id/status',async(req,res)=>{ try{ await db.query('UPDATE ordens_servico SET status=$1 WHERE id=$2',[req.body.status,req.params.id]); res.json({ok:true}); }catch(e){res.status(500).json({erro:e.message});} });
-app.get('/health',async(req,res)=>{ try{ await db.query('SELECT 1'); res.json({status:'OK',uptime:Math.floor(process.uptime())+'s'}); }catch{ res.status(500).json({status:'ERRO_DB'}); } });
+app.get('/health',async(req,res)=>{
+  const info={timestamp:new Date().toISOString(),uptime:Math.floor(process.uptime())+'s',memory:{rss:Math.round(process.memoryUsage().rss/1024/1024)+'MB',heapUsed:Math.round(process.memoryUsage().heapUsed/1024/1024)+'MB'}};
+  try{ await db.query('SELECT 1'); info.banco='OK'; }catch(e){ return res.status(500).json({status:'ERRO_DB',erro:e.message,...info}); }
+  if(process.env.WHATSAPP_API_URL){
+    try{ await axios.get(`${process.env.WHATSAPP_API_URL}/instance/connectionState/${process.env.WHATSAPP_INSTANCE}`,{headers:{apikey:process.env.WHATSAPP_TOKEN},timeout:5000}); info.whatsapp='CONECTADO'; }
+    catch(e){ info.whatsapp='DESCONECTADO'; info.whatsappErro=e.message; }
+  } else { info.whatsapp='NAO_CONFIGURADO'; }
+  res.json({status:'OK',...info});
+});
+
+app.get('/api/relatorio',async(req,res)=>{
+  try{
+    const [msgs,bols,oss,convs,ult24h]=await Promise.all([
+      db.query(`SELECT direcao,COUNT(*)::int AS total FROM mensagens GROUP BY direcao`),
+      db.query(`SELECT status,COUNT(*)::int AS total FROM boletins_ocorrencia GROUP BY status ORDER BY total DESC`),
+      db.query(`SELECT status,COUNT(*)::int AS total FROM ordens_servico GROUP BY status ORDER BY total DESC`),
+      db.query(`SELECT COUNT(*)::int AS total FROM conversas`),
+      db.query(`SELECT COUNT(*)::int AS total FROM mensagens WHERE enviado_em>=NOW()-INTERVAL '24 hours'`)
+    ]);
+    const mensagens={}; msgs.rows.forEach(r=>mensagens[r.direcao]=r.total);
+    res.json({geradoEm:new Date().toISOString(),uptime:Math.floor(process.uptime())+'s',conversasAtivas:convs.rows[0].total,mensagens,boletins:{porStatus:bols.rows},ordens:{porStatus:oss.rows},ultimasHoras24:{mensagens:ult24h.rows[0].total}});
+  }catch(e){res.status(500).json({erro:e.message});}
+});
+
 app.get('/',(_,res)=>res.send('Bot BM MOB - Online'));
 
 const PORT=process.env.PORT||3000;
