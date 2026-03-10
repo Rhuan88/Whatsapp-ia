@@ -1,0 +1,61 @@
+name: Security Review
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  backend-quality:
+    name: Backend Security & Quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check
+        run: node -c server.js
+
+      - name: Production audit (high+critical)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Ensure .env is not tracked
+        run: |
+          if git ls-files | grep -E '(^|/)\.env$'; then
+            echo "❌ .env versionado no repositório. Remova imediatamente."
+            exit 1
+          fi
+          echo "✅ .env não versionado."

@@ -1,0 +1,16 @@
+{
+  "event": "messages.upsert",
+  "instance": "whatsapp-bot",
+  "data": {
+    "key": {
+      "remoteJid": "5551999887766@s.whatsapp.net",
+      "fromMe": false,
+      "id": "testmsg123"
+    },
+    "message": {
+      "conversation": "menu"
+    },
+    "messageTimestamp": "1710034000",
+    "pushName": "Teste"
+  }
+}
