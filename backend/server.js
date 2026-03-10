@@ -23,7 +23,7 @@ async function inicializarBanco() {
 }
 
 const gerarProtocolo = () => `BO-${new Date().getFullYear()}-${Math.floor(Math.random()*9999999).toString().padStart(7,'0')}`;
-const gerarNumeroOS = () => { const d=new Date(); return `OS-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}-${Math.floor(Math.random()*99999).toString().padStart(5,'0')}`; };
+const gerarNumeroOS = () => { const d=new Date(); return `OSV-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}-${Math.floor(Math.random()*99999).toString().padStart(5,'0')}`; };
 const dataHoraBR = () => new Date().toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'});
 
 async function getConversa(tel) { const r=await db.query('SELECT * FROM conversas WHERE telefone=$1',[tel]); return r.rows[0]||null; }
@@ -36,7 +36,7 @@ async function chamarClaude(system,user) {
 }
 
 function promptBO(protocolo) {
-  return `Voce e um assistente especializado em Boletins de Ocorrencia da Brigada Militar do Rio Grande do Sul. Com base no relato fornecido, gere um guia detalhado e estruturado para preenchimento do aplicativo BM MOB, com o protocolo ${protocolo}. O guia deve conter: 1) Tipo de ocorrencia, 2) Dados do solicitante, 3) Dados do autor/suspeito (se houver), 4) Localizacao detalhada, 5) Descricao dos fatos em linguagem formal, 6) Objetos/veiculos envolvidos. Seja claro e objetivo, usando linguagem formal e juridica adequada.`;
+  return `Voce e um assistente especializado em Boletins de Ocorrencia. Com base no relato fornecido, gere um guia detalhado e estruturado para preenchimento do aplicativo de registro de ocorrencias, com o protocolo ${protocolo}. O guia deve conter: 1) Tipo de ocorrencia, 2) Dados do solicitante, 3) Dados do autor/suspeito (se houver), 4) Localizacao detalhada, 5) Descricao dos fatos em linguagem formal, 6) Objetos/veiculos envolvidos. Seja claro e objetivo, usando linguagem formal e juridica adequada.`;
 }
 
 function promptOS(numOS, tipo) {
@@ -64,7 +64,7 @@ async function consultarHistorico(tel) {
 }
 
 function menuPrincipal() {
-  return '🏛️ *Sistema de Registros Oficiais*\n_BM MOB - Brigada Militar RS_\n\n1️⃣ Gerar guia de BO para BM MOB\n2️⃣ Gerar Ordem de Servico\n3️⃣ Consultar historico\n4️⃣ Buscar por Protocolo/OS\n\n_Digite o numero da opcao._';
+  return '🏛️ *Sistema de Registros Oficiais*\n\n1️⃣ Gerar guia de Boletim de Ocorrencia\n2️⃣ Gerar Ordem de Servico\n3️⃣ Consultar historico\n4️⃣ Buscar por Protocolo/OS\n\n_Digite o numero da opcao._';
 }
 
 async function processarMensagem(tel, mensagem) {
@@ -75,10 +75,10 @@ async function processarMensagem(tel, mensagem) {
   await db.query('INSERT INTO mensagens(telefone,direcao,conteudo) VALUES($1,$2,$3)',[tel,'ENTRADA',mensagem]).catch(()=>{});
   if(['menu','oi','ola','0','cancelar','voltar','start'].includes(txt)){ await setEstado(tel,'MENU',{}); return menuPrincipal(); }
   if(estado==='INICIO'||estado==='MENU'){
-    if(txt==='1'){ await setEstado(tel,'BO_RELATO',{}); return '🚔 *Gerar Guia BO - BM MOB*\n\nInforme:\n1 O que aconteceu?\n2 Quando? (data e hora)\n3 Onde? (rua, numero, bairro, cidade)\n4 Seus dados: nome, RG, telefone\n5 Autor/suspeito (caracteristicas)\n6 Testemunhas (se houver)\n7 Objetos/veiculos envolvidos\n\n_Relate livremente._\n\nDigite *0* para cancelar.'; }
+    if(txt==='1'){ await setEstado(tel,'BO_RELATO',{}); return '🚔 *Gerar Guia de Boletim de Ocorrencia*\n\nInforme:\n1 O que aconteceu?\n2 Quando? (data e hora)\n3 Onde? (rua, numero, bairro, cidade)\n4 Seus dados: nome, RG, telefone\n5 Autor/suspeito (caracteristicas)\n6 Testemunhas (se houver)\n7 Objetos/veiculos envolvidos\n\n_Relate livremente._\n\nDigite *0* para cancelar.'; }
     if(txt==='2'){ await setEstado(tel,'OS_TIPO',{}); return '🔧 *Ordem de Servico*\n\nTipo de servico:\n1 Eletrico\n2 Hidraulico\n3 Manutencao Geral\n4 Limpeza/Conservacao\n5 Estrutural/Civil\n6 Outro\n\nDigite o numero:'; }
     if(txt==='3') return await consultarHistorico(tel);
-    if(txt==='4'){ await setEstado(tel,'BUSCA',{}); return 'Digite o protocolo (BO-...) ou numero OS (OS-...):'; }
+    if(txt==='4'){ await setEstado(tel,'BUSCA',{}); return 'Digite o protocolo (BO-...) ou numero da Ordem de Servico (OSV-...):'; }
     return menuPrincipal();
   }
   if(estado==='BO_RELATO'){
@@ -87,7 +87,7 @@ async function processarMensagem(tel, mensagem) {
     const prot=gerarProtocolo();
     const doc=await gerarBO(mensagem,s.id,prot);
     await setEstado(tel,'MENU',{});
-    return `✅ *Guia de BO Gerado*\n\nProtocolo: *${prot}*\n\n${doc}\n\nAbra o BM MOB e preencha tela por tela.\n\nDigite *menu* para voltar.`;
+    return `✅ *Guia de BO Gerado*\n\nProtocolo: *${prot}*\n\n${doc}\n\nDigite *menu* para voltar.`;
   }
   if(estado==='OS_TIPO'){
     const tipos={'1':'ELETRICO','2':'HIDRAULICO','3':'MANUTENCAO GERAL','4':'LIMPEZA/CONSERVACAO','5':'ESTRUTURAL/CIVIL','6':'OUTRO'};
@@ -109,7 +109,11 @@ async function processarMensagem(tel, mensagem) {
     const num=mensagem.trim().toUpperCase();
     let r=await db.query(`SELECT bo.*,s.telefone FROM boletins_ocorrencia bo JOIN solicitantes s ON s.id=bo.solicitante_id WHERE bo.protocolo=$1 AND s.telefone=$2`,[num,tel]);
     if(r.rows[0]){ const bo=r.rows[0]; await setEstado(tel,'MENU',{}); return `🚔 *${bo.protocolo}*\nStatus: ${bo.status}\n\n${bo.documento_gerado}\n\nDigite *menu* para voltar.`; }
-    r=await db.query(`SELECT os.*,s.telefone FROM ordens_servico os JOIN solicitantes s ON s.id=os.solicitante_id WHERE os.numero_os=$1 AND s.telefone=$2`,[num,tel]);
+    let osCandidatos = [num];
+    if (num.startsWith('OSV-')) osCandidatos.push(num.replace(/^OSV-/, 'OS-'));
+    if (num.startsWith('OS-')) osCandidatos.push(num.replace(/^OS-/, 'OSV-'));
+    osCandidatos = [...new Set(osCandidatos)];
+    r=await db.query(`SELECT os.*,s.telefone FROM ordens_servico os JOIN solicitantes s ON s.id=os.solicitante_id WHERE os.numero_os = ANY($1::text[]) AND s.telefone=$2`,[osCandidatos,tel]);
     if(r.rows[0]){ const os=r.rows[0]; await setEstado(tel,'MENU',{}); return `🔧 *${os.numero_os}*\nTipo: ${os.tipo_servico}\nStatus: ${os.status}\n\n${os.documento_gerado}\n\nDigite *menu* para voltar.`; }
     await setEstado(tel,'MENU',{});
     return 'Nao encontrado.\n\nDigite *menu* para voltar.';
@@ -121,7 +125,12 @@ async function processarMensagem(tel, mensagem) {
 app.post('/webhook',async(req,res)=>{
   try{
     const body=req.body; let tel,msg;
-    if(body.data?.key?.remoteJid){ tel=body.data.key.remoteJid.replace('@s.whatsapp.net',''); msg=body.data.message?.conversation||body.data.message?.extendedTextMessage?.text||''; }
+    if(body.data?.key?.remoteJid){
+      const remoteJid = body.data.key.remoteJid;
+      if (remoteJid.endsWith('@g.us')) return res.sendStatus(200);
+      tel=remoteJid.replace('@s.whatsapp.net','').replace('@c.us','');
+      msg=body.data.message?.conversation||body.data.message?.extendedTextMessage?.text||'';
+    }
     else if(body.phone&&body.text){ tel=body.phone; msg=body.text?.message||''; }
     else if(body.from&&body.body){ tel=body.from.replace('@c.us',''); msg=body.body; }
     if(!tel||!msg) return res.sendStatus(200);
@@ -133,15 +142,52 @@ app.post('/webhook',async(req,res)=>{
 
 async function enviarMensagem(tel,msg){
   if(!process.env.WHATSAPP_API_URL){ console.log(`[-> ${tel}]: ${msg.substring(0,80)}`); return; }
-  try{ await axios.post(`${process.env.WHATSAPP_API_URL}/message/sendText/${process.env.WHATSAPP_INSTANCE}`,{number:tel,text:msg},{headers:{apikey:process.env.WHATSAPP_TOKEN}}); }
-  catch(e){ console.error('Envio:',e.message); }
+  const numero = String(tel || '').replace(/\D/g, '');
+  if(!numero) return;
+  const url = `${process.env.WHATSAPP_API_URL}/message/sendText/${process.env.WHATSAPP_INSTANCE}`;
+  const headers = { apikey: process.env.WHATSAPP_TOKEN };
+  try{
+    await axios.post(url,{number:numero,text:msg},{headers});
+  }
+  catch(_e1){
+    try{
+      await axios.post(url,{number:numero,textMessage:{text:msg}},{headers});
+    }
+    catch(e2){
+      const detalhe = e2.response?.data ? ` ${JSON.stringify(e2.response.data)}` : '';
+      console.error('Envio:',e2.message + detalhe);
+    }
+  }
 }
 
 app.get('/api/boletins',async(req,res)=>{ try{ const r=await db.query(`SELECT bo.*,s.telefone FROM boletins_ocorrencia bo JOIN solicitantes s ON s.id=bo.solicitante_id ORDER BY bo.criado_em DESC LIMIT 100`); res.json(r.rows); }catch(e){res.status(500).json({erro:e.message});} });
 app.get('/api/ordens',async(req,res)=>{ try{ const r=await db.query(`SELECT os.*,s.telefone FROM ordens_servico os JOIN solicitantes s ON s.id=os.solicitante_id ORDER BY os.criado_em DESC LIMIT 100`); res.json(r.rows); }catch(e){res.status(500).json({erro:e.message});} });
 app.patch('/api/ordens/:id/status',async(req,res)=>{ try{ await db.query('UPDATE ordens_servico SET status=$1 WHERE id=$2',[req.body.status,req.params.id]); res.json({ok:true}); }catch(e){res.status(500).json({erro:e.message});} });
-app.get('/health',async(req,res)=>{ try{ await db.query('SELECT 1'); res.json({status:'OK',uptime:Math.floor(process.uptime())+'s'}); }catch{ res.status(500).json({status:'ERRO_DB'}); } });
-app.get('/',(_,res)=>res.send('Bot BM MOB - Online'));
+app.get('/health',async(req,res)=>{
+  const info={timestamp:new Date().toISOString(),uptime:Math.floor(process.uptime())+'s',memory:{rss:Math.round(process.memoryUsage().rss/1024/1024)+'MB',heapUsed:Math.round(process.memoryUsage().heapUsed/1024/1024)+'MB'}};
+  try{ await db.query('SELECT 1'); info.banco='OK'; }catch(e){ return res.status(500).json({status:'ERRO_DB',erro:e.message,...info}); }
+  if(process.env.WHATSAPP_API_URL){
+    try{ await axios.get(`${process.env.WHATSAPP_API_URL}/instance/connectionState/${process.env.WHATSAPP_INSTANCE}`,{headers:{apikey:process.env.WHATSAPP_TOKEN},timeout:5000}); info.whatsapp='CONECTADO'; }
+    catch(e){ info.whatsapp='DESCONECTADO'; info.whatsappErro=e.message; }
+  } else { info.whatsapp='NAO_CONFIGURADO'; }
+  res.json({status:'OK',...info});
+});
+
+app.get('/api/relatorio',async(req,res)=>{
+  try{
+    const [msgs,bols,oss,convs,ult24h]=await Promise.all([
+      db.query(`SELECT direcao,COUNT(*)::int AS total FROM mensagens GROUP BY direcao`),
+      db.query(`SELECT status,COUNT(*)::int AS total FROM boletins_ocorrencia GROUP BY status ORDER BY total DESC`),
+      db.query(`SELECT status,COUNT(*)::int AS total FROM ordens_servico GROUP BY status ORDER BY total DESC`),
+      db.query(`SELECT COUNT(*)::int AS total FROM conversas`),
+      db.query(`SELECT COUNT(*)::int AS total FROM mensagens WHERE enviado_em>=NOW()-INTERVAL '24 hours'`)
+    ]);
+    const mensagens={}; msgs.rows.forEach(r=>mensagens[r.direcao]=r.total);
+    res.json({geradoEm:new Date().toISOString(),uptime:Math.floor(process.uptime())+'s',conversasAtivas:convs.rows[0].total,mensagens,boletins:{porStatus:bols.rows},ordens:{porStatus:oss.rows},ultimasHoras24:{mensagens:ult24h.rows[0].total}});
+  }catch(e){res.status(500).json({erro:e.message});}
+});
+
+app.get('/',(_,res)=>res.send('Bot de Atendimento - Online'));
 
 const PORT=process.env.PORT||3000;
 inicializarBanco().then(()=>app.listen(PORT,()=>console.log(`Porta ${PORT}`))).catch(e=>{console.error(e);process.exit(1);});
