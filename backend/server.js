@@ -187,7 +187,7 @@ app.get('/api/relatorio',async(req,res)=>{
   }catch(e){res.status(500).json({erro:e.message});}
 });
 
-app.get('/',(_,res)=>res.send('Bot de Atendimento - Online'));
+app.get('/',(_,res)=>res.send('Bot Estive - Online'));
 
 const PORT=process.env.PORT||3000;
 inicializarBanco().then(()=>app.listen(PORT,()=>console.log(`Porta ${PORT}`))).catch(e=>{console.error(e);process.exit(1);});

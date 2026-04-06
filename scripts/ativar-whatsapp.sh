@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# Script de Ativação do WhatsApp Bot
+# Script de Ativação do Bot Estive
 # Este script gera o QR Code e conecta o número do WhatsApp à instância
 
 set -e
 
 # Configurações padrão (podem ser sobrescritas via variáveis de ambiente)
 API_URL="${WHATSAPP_API_URL:-https://evolution-api-production-5d52.up.railway.app}"
-INSTANCE_NAME="${WHATSAPP_INSTANCE:-whatsapp-bot}"
+INSTANCE_NAME="${WHATSAPP_INSTANCE:-bot-estive}"
 API_KEY="${WHATSAPP_TOKEN:-Pmrhuan2013}"
 
 echo ""
 echo "=========================================="
-echo "  ATIVAÇÃO DO BOT WHATSAPP"
+echo "  ATIVAÇÃO DO BOT ESTIVE"
 echo "=========================================="
 echo ""
 echo "API URL: $API_URL"
@@ -89,7 +89,7 @@ code{color:#93c5fd;background:#0f172a;padding:2px 6px;border-radius:4px;font-siz
 <body>
 <div class='container'>
   <div class='card'>
-    <h1>🔗 Conectar WhatsApp Bot</h1>
+    <h1>🔗 Conectar Bot Estive</h1>
     <div class='qr-container'>
       <img src='$QR_BASE64' alt='QR Code WhatsApp'/>
     </div>

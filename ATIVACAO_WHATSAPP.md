@@ -1,4 +1,4 @@
-# Guia de Ativação do WhatsApp Bot
+# Guia de Ativação do Bot Estive
 
 Este guia explica como ativar e conectar o número do WhatsApp ao bot.
 
@@ -44,7 +44,7 @@ Use curl diretamente:
 ```bash
 # Gerar QR Code
 curl -H "apikey: Pmrhuan2013" \
-  https://evolution-api-production-5d52.up.railway.app/instance/connect/whatsapp-bot
+  https://evolution-api-production-5d52.up.railway.app/instance/connect/bot-estive
 
 # O retorno conterá o QR Code em base64
 ```
@@ -62,7 +62,7 @@ curl -H "apikey: Pmrhuan2013" \
 ```bash
 # Verificar estado da conexão
 curl -H "apikey: Pmrhuan2013" \
-  https://evolution-api-production-5d52.up.railway.app/instance/connectionState/whatsapp-bot
+  https://evolution-api-production-5d52.up.railway.app/instance/connectionState/bot-estive
 
 # Deve retornar: {"state":"open"} ou {"instance":{"state":"open"}}
 ```
@@ -110,7 +110,7 @@ Digite o número da opção.
 curl -X POST \
   -H "apikey: Pmrhuan2013" \
   -H "Content-Type: application/json" \
-  -d '{"instanceName":"whatsapp-bot","qrcode":true}' \
+  -d '{"instanceName":"bot-estive","qrcode":true}' \
   https://evolution-api-production-5d52.up.railway.app/instance/create
 ```
 
@@ -125,7 +125,7 @@ curl -X POST \
 ```bash
 # Verificar configuração do webhook
 curl -H "apikey: Pmrhuan2013" \
-  https://evolution-api-production-5d52.up.railway.app/webhook/find/whatsapp-bot
+  https://evolution-api-production-5d52.up.railway.app/webhook/find/bot-estive
 
 # Configurar webhook (se necessário)
 curl -X POST \
@@ -136,7 +136,7 @@ curl -X POST \
     "events": ["MESSAGES_UPSERT"],
     "enabled": true
   }' \
-  https://evolution-api-production-5d52.up.railway.app/webhook/set/whatsapp-bot
+  https://evolution-api-production-5d52.up.railway.app/webhook/set/bot-estive
 ```
 
 ## Reativar WhatsApp
@@ -164,14 +164,14 @@ curl -H "apikey: Pmrhuan2013" \
 ```bash
 curl -X DELETE \
   -H "apikey: Pmrhuan2013" \
-  https://evolution-api-production-5d52.up.railway.app/instance/logout/whatsapp-bot
+  https://evolution-api-production-5d52.up.railway.app/instance/logout/bot-estive
 ```
 
 ### Deletar instância
 ```bash
 curl -X DELETE \
   -H "apikey: Pmrhuan2013" \
-  https://evolution-api-production-5d52.up.railway.app/instance/delete/whatsapp-bot
+  https://evolution-api-production-5d52.up.railway.app/instance/delete/bot-estive
 ```
 
 ## Segurança

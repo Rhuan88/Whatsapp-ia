@@ -35,7 +35,7 @@
 DATABASE_URL=postgresql://SEU_USUARIO:SUA_SENHA@SEU_HOST.neon.tech/neondb?sslmode=require
 ANTHROPIC_API_KEY=sk-ant-COLE_SUA_CHAVE
 WHATSAPP_API_URL=https://evolution-api-production-5d52.up.railway.app
-WHATSAPP_INSTANCE=whatsapp-bot
+WHATSAPP_INSTANCE=bot-estive
 WHATSAPP_TOKEN=Pmrhuan2013
 PORT=3000
 ```
@@ -55,7 +55,7 @@ DATABASE_PROVIDER=postgresql
 DATABASE_CONNECTION_URI=${{DATABASE_URL}}
 ```
 
-2. Garantir instância `whatsapp-bot`.
+2. Garantir instância `bot-estive`.
 3. Conectar número via QR até estado `open`.
 
 ### Etapa C — Integração

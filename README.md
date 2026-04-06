@@ -41,6 +41,20 @@ O script irá:
 
 Escaneie o QR Code com o WhatsApp do celular que será usado como bot.
 
+### Verificar Conexão
+
+Para verificar se tudo está funcionando:
+
+```bash
+cd scripts
+./verificar-conexao.sh
+```
+
+Este script verifica:
+- Status do backend (Render)
+- Status da conexão do WhatsApp (Evolution API)
+- Configuração do webhook
+
 ## Observação de segurança
 
 Nunca versionar `.env` e rotacionar credenciais após qualquer exposição.

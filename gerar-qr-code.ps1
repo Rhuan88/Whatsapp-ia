@@ -1,6 +1,6 @@
 param(
     [string]$ApiUrl = "https://evolution-api-production-5d52.up.railway.app",
-    [string]$InstanceName = "whatsapp-bot",
+    [string]$InstanceName = "bot-estive",
     [string]$ApiKey = "Pmrhuan2013",
     [string]$OutputPath = "$env:TEMP\whatsapp-qr-code.html"
 )
