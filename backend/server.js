@@ -187,6 +187,123 @@ app.get('/api/relatorio',async(req,res)=>{
   }catch(e){res.status(500).json({erro:e.message});}
 });
 
+// ─── Endpoints de ativação/gerenciamento do WhatsApp ─────────────────────────
+
+async function chamarEvolution(method, path, body) {
+  const url = `${process.env.WHATSAPP_API_URL}${path}`;
+  const headers = { apikey: process.env.WHATSAPP_TOKEN };
+  const opts = { headers, timeout: 10000 };
+  try {
+    if (method === 'GET') return (await axios.get(url, opts)).data;
+    if (method === 'POST') return (await axios.post(url, body, opts)).data;
+    if (method === 'DELETE') return (await axios.delete(url, opts)).data;
+  } catch (e) {
+    const detalhe = e.response?.data ? ` — ${JSON.stringify(e.response.data)}` : '';
+    throw new Error(`Evolution API ${method} ${path}: ${e.message}${detalhe}`);
+  }
+}
+
+app.get('/api/whatsapp/status', async (req, res) => {
+  if (!process.env.WHATSAPP_API_URL) return res.status(400).json({ erro: 'WHATSAPP_API_URL não configurada' });
+  try {
+    const data = await chamarEvolution('GET', `/instance/connectionState/${process.env.WHATSAPP_INSTANCE}`);
+    const state = data?.instance?.state || data?.state || 'desconhecido';
+    res.json({ status: state, detalhes: data });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+app.post('/api/whatsapp/conectar', async (req, res) => {
+  if (!process.env.WHATSAPP_API_URL) return res.status(400).json({ erro: 'WHATSAPP_API_URL não configurada' });
+  const instance = process.env.WHATSAPP_INSTANCE;
+  try {
+    // Verificar se a instância já existe
+    const stateResp = await chamarEvolution('GET', `/instance/connectionState/${instance}`).catch(() => null);
+    const state = stateResp?.instance?.state || stateResp?.state;
+    if (state === 'open' || state === 'connected') {
+      return res.json({ mensagem: 'WhatsApp já está conectado', status: state });
+    }
+  } catch (e) { console.error('[whatsapp/conectar] verificar estado:', e.message); /* instância pode não existir */ }
+
+  try {
+    // Tentar criar a instância caso não exista
+    await chamarEvolution('POST', '/instance/create', { instanceName: instance, qrcode: true }).catch(() => null);
+    // Gerar QR Code
+    const qrResp = await chamarEvolution('GET', `/instance/connect/${instance}`);
+    const base64 = qrResp?.base64 || qrResp?.qrcode?.base64;
+    if (!base64) return res.status(502).json({ erro: 'QR Code não retornado pela API', detalhes: qrResp });
+    res.json({ mensagem: 'Escaneie o QR Code com o WhatsApp', qrcode: base64, instancia: instance });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+app.get('/api/whatsapp/qr', async (req, res) => {
+  if (!process.env.WHATSAPP_API_URL) return res.status(400).send('WHATSAPP_API_URL não configurada');
+  const instance = process.env.WHATSAPP_INSTANCE;
+  let base64 = '';
+  try {
+    await chamarEvolution('POST', '/instance/create', { instanceName: instance, qrcode: true }).catch(() => null);
+    const qrResp = await chamarEvolution('GET', `/instance/connect/${instance}`);
+    base64 = qrResp?.base64 || qrResp?.qrcode?.base64 || '';
+  } catch (e) {
+    return res.status(500).send(`Erro ao obter QR Code: ${e.message}`);
+  }
+  if (!base64) return res.status(502).send('QR Code não disponível. Verifique se a Evolution API está acessível.');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Conectar WhatsApp</title>
+<meta http-equiv="refresh" content="60">
+<style>
+body{display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#0f172a;font-family:Arial,sans-serif;color:#fff}
+.card{background:#111827;padding:32px;border-radius:16px;text-align:center;max-width:480px;width:100%;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+h1{margin:0 0 8px;font-size:22px;color:#f1f5f9}
+p{color:#94a3b8;margin:0 0 20px}
+.qr{background:#fff;padding:14px;border-radius:12px;display:inline-block;margin-bottom:20px}
+.qr img{width:280px;height:280px;display:block}
+.steps{text-align:left;background:#1e293b;padding:16px 20px;border-radius:8px;font-size:14px;line-height:1.8;color:#cbd5e1}
+.steps ol{margin:0;padding-left:18px}
+.warn{margin-top:16px;background:#7c2d12;color:#fed7aa;padding:10px 14px;border-radius:8px;font-size:13px}
+code{color:#93c5fd;background:#0f172a;padding:2px 6px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🔗 Conectar WhatsApp</h1>
+  <p>Instância: <code>${instance}</code></p>
+  <div class="qr"><img src="${base64}" alt="QR Code WhatsApp"/></div>
+  <div class="steps">
+    <strong>📱 Como conectar:</strong>
+    <ol>
+      <li>Abra o WhatsApp no celular</li>
+      <li>Vá em <strong>Menu (⋮)</strong> → <strong>Aparelhos conectados</strong></li>
+      <li>Toque em <strong>Conectar um aparelho</strong></li>
+      <li>Escaneie o QR Code acima</li>
+    </ol>
+  </div>
+  <div class="warn">⚠️ QR Code expira em 60s — a página recarrega automaticamente.</div>
+</div>
+</body>
+</html>`);
+});
+
+app.post('/api/whatsapp/desconectar', async (req, res) => {
+  if (!process.env.WHATSAPP_API_URL) return res.status(400).json({ erro: 'WHATSAPP_API_URL não configurada' });
+  try {
+    const data = await chamarEvolution('DELETE', `/instance/logout/${process.env.WHATSAPP_INSTANCE}`);
+    res.json({ mensagem: 'WhatsApp desconectado', detalhes: data });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 app.get('/',(_,res)=>res.send('Bot de Atendimento - Online'));
 
 const PORT=process.env.PORT||3000;
