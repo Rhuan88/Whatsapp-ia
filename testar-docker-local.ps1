@@ -50,7 +50,7 @@ docker run -d `
     -e AUTHENTICATION_API_KEY="Pmrhuan2013" `
   -e SERVER_URL="http://localhost:8080" `
   -e WEBSOCKET_ENABLED=true `
-    -e CONFIG_SESSION_PHONE_CLIENT="Bot Atendimento" `
+    -e CONFIG_SESSION_PHONE_CLIENT="Bot Estive" `
   -e DEL_INSTANCE=false `
   -e STORE_MESSAGES=true `
   -e STORE_MESSAGE_UP=true `

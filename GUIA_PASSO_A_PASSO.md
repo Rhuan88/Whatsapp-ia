@@ -29,7 +29,7 @@ Variáveis obrigatórias no Backend (Render):
 DATABASE_URL=postgresql://SEU_USUARIO:SUA_SENHA@SEU_HOST.neon.tech/neondb?sslmode=require
 ANTHROPIC_API_KEY=sk-ant-COLE_SUA_CHAVE
 WHATSAPP_API_URL=https://evolution-api-production-5d52.up.railway.app
-WHATSAPP_INSTANCE=whatsapp-bot
+WHATSAPP_INSTANCE=bot-estive
 WHATSAPP_TOKEN=Pmrhuan2013
 PORT=3000
 ```
@@ -42,7 +42,7 @@ No serviço da Evolution, configure:
 AUTHENTICATION_API_KEY=Pmrhuan2013
 SERVER_URL=${{RAILWAY_PUBLIC_DOMAIN}}
 WEBSOCKET_ENABLED=true
-CONFIG_SESSION_PHONE_CLIENT=Bot Atendimento
+CONFIG_SESSION_PHONE_CLIENT=Bot Estive
 DATABASE_ENABLED=true
 DATABASE_PROVIDER=postgresql
 DATABASE_CONNECTION_URI=${{DATABASE_URL}}
@@ -66,7 +66,7 @@ Depois, em **Environment Variables**, adicionar todas as variáveis do item 1.
 
 ## 4) Conectar número do WhatsApp
 
-1. Criar/usar instância `whatsapp-bot` na Evolution
+1. Criar/usar instância `bot-estive` na Evolution
 2. Gerar QR Code
 3. No celular do número oficial:
    - WhatsApp > Aparelhos conectados > Conectar aparelho
